@@ -1,0 +1,23 @@
+# Downloaded JDK
+jdk-25/
+temurin-25.zip
+
+# Cloned project
+petclinic/
+
+# Extracted JARs
+extracted/
+extracted-aot/
+
+# AOT cache files
+*.aot
+
+# Benchmark logs
+*.log
+
+# Dockerfile copied into petclinic during podman build
+petclinic/Dockerfile
+
+application/
+
+.claude/settings.local.json

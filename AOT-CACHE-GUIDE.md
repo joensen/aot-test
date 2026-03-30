@@ -51,8 +51,8 @@ flowchart TD
     create AOT cache"]
     B -- "target/*.jar" --> C
     C -- "extracted/ + app.aot" --> D["production:
-    eclipse-temurin:25-jre
-    Minimal runtime image"]
+    eclipse-temurin:25-jdk
+    Runtime image"]
 ```
 
 ## Dockerfile
@@ -95,7 +95,7 @@ RUN java \
 # ============================================================
 # Stage 3: Production image
 # ============================================================
-FROM eclipse-temurin:25-jre AS production
+FROM eclipse-temurin:25-jdk AS production
 
 WORKDIR /app
 
@@ -169,12 +169,20 @@ build-aot-image:
 
 | Requirement | Detail |
 |---|---|
-| **Same JVM** | The exact same JDK version must be used for training and production |
+| **Same JVM** | The exact same JDK version and base image must be used for training and production (see below) |
 | **Classpath as JARs** | Must be a list of JARs — no directories, no wildcards, no nested JARs (that's why we extract) |
 | **Preserved timestamps** | JAR file timestamps must not change between training and production |
 | **Classpath superset** | Production classpath must be a superset of the training classpath |
 
 The multi-stage Dockerfile satisfies all of these because stages 2 and 3 use the exact same extracted files.
+
+### Why the Same JDK Version Matters
+
+The AOT cache is a binary artifact tightly coupled to the JVM that created it. It contains pre-resolved constant pool entries, class metadata layouts, and heap objects that depend on the exact internal representation used by that specific JDK build. If the production JDK differs from the training JDK — even a minor patch update — the cache will be silently ignored or the JVM will refuse to load it entirely.
+
+This is why the training and production stages in the Dockerfile must use the **same base image** (`eclipse-temurin:25-jdk`). Using a multi-stage build from a single base image guarantees version alignment. If you were to train locally and deploy to a container (or vice versa), even a difference in the JDK patch level would invalidate the cache, and you would fall back to normal startup times with no warning other than a log message.
+
+In CI/CD pipelines, pin the base image to a specific digest or tag (e.g., `eclipse-temurin:25-jdk@sha256:...`) to prevent a mid-build image update from creating a version mismatch between stages.
 
 ### Spring AOT Restrictions
 

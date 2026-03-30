@@ -234,6 +234,13 @@ xychart-beta
 
 Spring AOT alone provides a modest improvement, but combining it with the JVM AOT Cache delivers the biggest win — **startup drops from 3.4s to 1.0s**.
 
+### Podman (Containerized)
+
+| Scenario | Startup |
+|---|---|
+| Baseline (no optimizations) | 3.646s |
+| Spring AOT + JVM AOT Cache | 1.321s |
+
 ## Going Further: Real Training Runs
 
 The `onRefresh` training is a "poor man's training run" — it captures class loading but **not method profiles**. For even better warm-up performance, replace the training stage with a real workload:
